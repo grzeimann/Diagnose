@@ -146,6 +146,7 @@ M = np.nanmean(spec, axis=1)
 # Build empty arrays to save the data
 chis = np.zeros((len(shortsel), 3))
 thresh = np.zeros((len(shortsel),))
+classification = np.zeros((len(shortsel),))
 zs = np.zeros((len(shortsel), 3))
 models = np.zeros((len(shortsel), 3, 1036))
 
@@ -173,9 +174,21 @@ for i in np.arange(len(spec)):
                                                                  sel, 
                                                                  config.zbins_qso)
     thresh[i] = np.sqrt(2. * dof_stars) / dof_stars
-    make_plot = False
     chis[i] = np.array([chi2_stars, chi2_galaxy, chi2_qso])
     zs[i] = np.array([vbest, zbest_galaxy, zbest_qso])
     models[i, 0] = model_stars
     models[i, 1] = model_galaxy
     models[i, 2] = model_qso
+    norm = np.min(chis[i])
+    s = np.sort(chis[i] / norm)
+    if s[0] < (s[1] - thresh[i]):
+        classification[i] = np.argmin(chis[i]) + 1
+    else:
+        classification[i] = 4
+    
+fitslist = [fits.PrimaryHDU(models), fits.ImageHDU(classification), 
+            fits.ImageHDU(chis), fits.ImageHDU(thresh), fits.ImagHDU(zs)]
+for f, n in zip(fitslist, ['models', 'class', 'chi2', 'thresh',
+                           'zs']):
+    f.header['EXTNAME'] = n
+fits.HDUList(fitslist).writeto('classification_%03d.fits' % args.suffix)
