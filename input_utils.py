@@ -51,6 +51,10 @@ def parse_args(argv=None):
                             
     parser.add_argument("catalog", nargs='?', type=str,
                         help='''Filename for the catalog''')
+    
+    parser.add_argument("-s", "--suffix", type=int,
+                        help='''Filename for the catalog''',
+                        default=1)
 
     parser.add_argument("-li", "--low_index", type=int,
                         help='''Lower Index''', default=None)
