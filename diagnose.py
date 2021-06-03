@@ -81,6 +81,7 @@ fitter = LevMarLSQFitter()
 if args.index_filename is not None:
     try:
         shortsel = np.loadtxt(args.index_filename)
+        shortsel = np.array(shortsel, dtype=int)
     except:
         log.error('Could not read file: %s' % args.index_filename)
         log.error('Try saving indices with numpy.savetxt()')
