@@ -191,4 +191,5 @@ fitslist = [fits.PrimaryHDU(models), fits.ImageHDU(classification),
 for f, n in zip(fitslist, ['models', 'class', 'chi2', 'thresh',
                            'zs']):
     f.header['EXTNAME'] = n
-fits.HDUList(fitslist).writeto('classification_%03d.fits' % args.suffix)
+fits.HDUList(fitslist).writeto('classification_%03d.fits' % args.suffix, 
+            overwrite=True)
