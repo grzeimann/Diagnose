@@ -8,7 +8,6 @@ Created on Thu Mar 25 19:44:36 2021
 
 import numpy as np
 import os.path as op
-import sys
 
 from astropy.convolution import Gaussian1DKernel, convolve
 from astropy.io import fits
@@ -19,7 +18,7 @@ def get_script_path():
     '''
     Get script path, aka, where does Diagnose live?
     '''
-    return op.dirname(op.realpath(sys.argv[0]))
+    return op.dirname(op.realpath(__file__))
 
 def get_pca_miles(n_components=50, 
                   lp='/Users/gregz/Downloads/MILES_library_v9.1_FITS'):
@@ -102,8 +101,8 @@ def get_pca_stars(template_name, vbins=np.linspace(-500, 500, 50),
     lp = op.join(dirname, 'stellar-templates', template_name)
     f = fits.open(lp)
     models = f[0].data
-    orig_wave = 10**(f[0].header['CRVAL1']+np.arange(models.shape[1])*
-                     f[0].header['CDELT1'])
+    orig_wave = (f[0].header['CRVAL1'] + 
+                 np.arange(models.shape[1])*f[0].header['CDELT1'])
     M = np.zeros((len(vbins), models.shape[0], len(wave)))
     for j in np.arange(models.shape[0]):
         I = interp1d(orig_wave, models[j], kind='quadratic', bounds_error=False, 
