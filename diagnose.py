@@ -172,7 +172,8 @@ for i in np.arange(len(spec)):
                                                                  sel, 
                                                                  config.zbins_qso)
     thresh[i] = np.sqrt(2. * dof_stars) / dof_stars
-    chis[i] = np.array([chi2_stars, chi2_galaxy, chi2_qso])
+    chis[i] = np.array([np.min(chi2_stars), np.min(chi2_galaxy), 
+                        np.min(chi2_qso)])
     zs[i] = np.array([vbest, zbest_galaxy, zbest_qso])
     models[i, 0] = model_stars
     models[i, 1] = model_galaxy
