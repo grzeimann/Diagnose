@@ -65,8 +65,6 @@ def parse_args(argv=None):
     parser.add_argument("-if", "--index_filename", type=str,
                         help='''Indice Filename''', default=None)
 
-    parser.add_argument("-hr","--highres", help='''High Res Mode?''',
-                        action="count", default=0)
                         
     args = parser.parse_args(args=argv)
 
