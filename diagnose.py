@@ -9,7 +9,6 @@ Created on Wed Dec 23 10:44:43 2020
 import config
 import numpy as np
 import os
-import psutil
 import sys
 import warnings
 
@@ -38,8 +37,6 @@ def get_reduced_chi2(H, spectrum, spectrum_error, m, sel, zbins,
 
 args = parse_args()
 log = setup_logging('diagnose')
-process = psutil.Process(os.getpid())
-log.info('Memory Used: %0.2f GB' % (process.memory_info()[0] / 1e9))
 
 # This is a hack to ignore unwanted (and hopefully not important) warnings
 warnings.simplefilter("ignore")
@@ -149,8 +146,6 @@ zs = np.zeros((len(shortsel), 3))
 models = np.zeros((len(shortsel), 4, 1036))
 
 # Checking memory useage
-process = psutil.Process(os.getpid())
-log.info('Memory Used: %0.2f GB' % (process.memory_info()[0] / 1e9))
 
 # Begin the fitting
 for i in np.arange(len(spec)):
