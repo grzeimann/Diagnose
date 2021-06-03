@@ -146,7 +146,7 @@ chis = np.zeros((len(shortsel), 3))
 thresh = np.zeros((len(shortsel),))
 classification = np.zeros((len(shortsel),))
 zs = np.zeros((len(shortsel), 3))
-models = np.zeros((len(shortsel), 3, 1036))
+models = np.zeros((len(shortsel), 4, 1036))
 
 # Checking memory useage
 process = psutil.Process(os.getpid())
@@ -178,6 +178,7 @@ for i in np.arange(len(spec)):
     models[i, 0] = model_stars
     models[i, 1] = model_galaxy
     models[i, 2] = model_qso
+    models[i, 3] = spec[i]
     norm = np.min(chis[i])
     s = np.sort(chis[i] / norm)
     if s[0] < (s[1] - thresh[i]):
