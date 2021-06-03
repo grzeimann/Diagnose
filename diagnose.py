@@ -186,7 +186,7 @@ for i in np.arange(len(spec)):
         classification[i] = 4
     
 fitslist = [fits.PrimaryHDU(models), fits.ImageHDU(classification), 
-            fits.ImageHDU(chis), fits.ImageHDU(thresh), fits.ImagHDU(zs)]
+            fits.ImageHDU(chis), fits.ImageHDU(thresh), fits.ImageHDU(zs)]
 for f, n in zip(fitslist, ['models', 'class', 'chi2', 'thresh',
                            'zs']):
     f.header['EXTNAME'] = n
