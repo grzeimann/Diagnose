@@ -7,12 +7,10 @@ Created on Wed Dec 23 10:44:43 2020
 """
 
 import config
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import psutil
 import sys
-import time
 import warnings
 
 from astropy.io import fits
