@@ -122,11 +122,17 @@ def get_pca_qso(zbins=np.linspace(0.01, 0.5, 50),
     orig_wave = 10**(f[0].header['CRVAL1']+np.arange(models.shape[1])*
                      f[0].header['CDELT1'])
     M = np.zeros((len(zbins), models.shape[0], len(wave)))
+    G = Gaussian1DKernel(0.5)
     for j in np.arange(models.shape[0]):
-        I = interp1d(orig_wave, models[j], kind='quadratic', bounds_error=False, 
-                     fill_value=0.0)
         for i, z in enumerate(zbins):
-            M[i, j] = I(wave/(1.+z))
+            nwave = orig_wave * (1.+z)
+            nbins = int(len(nwave) / (2. / (nwave[1] - nwave[0])))
+            nwave = np.array([np.mean(chunk) for chunk in np.array_split(nwave, nbins)])
+            nmod = np.array([np.mean(chunk) for chunk in np.array_split(models[j], nbins)])
+            nmod = convolve(nmod, G, boundary='extend')
+            I = interp1d(nwave, nmod, kind='quadratic', bounds_error=False, 
+                     fill_value=0.0)
+            M[i, j] = I(wave)
     M = (M - np.mean(M, axis=(0, 2))[np.newaxis, :, np.newaxis]) / np.std(M, axis=(0, 2))[np.newaxis, :, np.newaxis]
     return M
 
@@ -139,10 +145,16 @@ def get_pca_galaxy(zbins=np.linspace(0.01, 0.5, 50),
     orig_wave = (f[0].header['CRVAL1']+np.arange(models.shape[1])*
                  f[0].header['CDELT1'])
     M = np.zeros((len(zbins), models.shape[0], len(wave)))
+    G = Gaussian1DKernel(1.5)
     for j in np.arange(models.shape[0]):
-        I = interp1d(orig_wave, models[j], kind='quadratic', bounds_error=False, 
-                     fill_value=0.0)
         for i, z in enumerate(zbins):
-            M[i, j] = I(wave/(1.+z))
+            nwave = orig_wave * (1.+z)
+            nbins = int(len(nwave) / (2. / (nwave[1] - nwave[0])))
+            nwave = np.array([np.mean(chunk) for chunk in np.array_split(nwave, nbins)])
+            nmod = np.array([np.mean(chunk) for chunk in np.array_split(models[j], nbins)])
+            nmod = convolve(nmod, G, boundary='extend')
+            I = interp1d(nwave, nmod, kind='quadratic', bounds_error=False, 
+                     fill_value=0.0)
+            M[i, j] = I(wave)
     M = (M - np.mean(M, axis=(0, 2))[np.newaxis, :, np.newaxis]) / np.std(M, axis=(0, 2))[np.newaxis, :, np.newaxis]
     return M
