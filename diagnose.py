@@ -18,21 +18,37 @@ from astropy.modeling.models import Polynomial1D
 from pca_library import get_pca_stars, get_pca_galaxy, get_pca_qso
 from input_utils import parse_args, setup_logging
 
-def get_reduced_chi2(H, spectrum, spectrum_error, m, sel, zbins, 
-                     n_components=10):
+def get_min(x, y, ind):
+    ind0 = ind - 1
+    ind1 = ind 
+    ind2 = ind + 1
+    dx = x[1] - x[0]
+    m = (x[ind1] - dx * (y[ind2] - y[ind0]) /
+         (2. * (y[ind2] - 2. * y[ind1] + y[ind0])))
+    p = np.polyfit(x[ind-1:ind+2], y[ind-1:ind+2], 2)
+    my = np.polyval(p, m)
+    return m, my
+
+def get_reduced_chi2(H, spectrum, spectrum_error, m, sel1, zbins, 
+                     n_components=10, outlier_thresh=5.):
     chi2 = np.zeros((len(zbins),))
+    sel = sel1 * True
     for j in np.arange(len(zbins)):
         solgal = np.linalg.lstsq(H[j].T[sel], spectrum[sel] - m)[0]
         gal_model = np.dot(H[j].T, solgal) + M[i]
-        chi2[j] = (1. / (sel.sum() + 1. - n_components) *
-                   np.sum((spectrum[sel] - gal_model[sel])**2 / 
-                           spectrum_error[sel]**2))
+        V = (spectrum[sel] - gal_model[sel]) / spectrum_error[sel]
+        chi2[j] = (1. / (sel.sum() + 1. - n_components) * np.sum(V**2))
     ind = np.argmin(chi2)
+    if (ind == 0) or (ind == (len(chi2)-1)):
+        z = zbins[ind]
+        mchi = chi2[ind]
+    else:
+        z, mchi = get_min(zbins, chi2, ind)
     sol = np.linalg.lstsq(H[ind].T[sel], spectrum[sel] - m)[0]
     model = np.dot(H[ind].T, sol) + m
     model[np.isnan(spectrum)] = np.nan
     dof = (sel.sum() + 1. - n_components)
-    return chi2, model, zbins[ind], dof
+    return mchi, model, z, dof
 
 
 args = parse_args()
@@ -114,7 +130,7 @@ for ind in np.arange(spec.shape[0]):
     # Initialize this polynomial model for 3rd order
     P = Polynomial1D(3)
     # Select values that are not extreme outliers (watch for nans so use nanmedian)
-    wmask = weigh[ind] > 0.3*np.nanmedian(weigh[ind])
+    wmask = weigh[ind] > 0.3 * np.nanmedian(weigh[ind])
     # Fit Polynomial
     fit = fitter(P, wave[wmask], weigh[ind][wmask])
     # Mask values below 80% of the fit
@@ -144,7 +160,7 @@ chis = np.zeros((len(shortsel), 3))
 thresh = np.zeros((len(shortsel),))
 classification = np.zeros((len(shortsel),))
 zs = np.zeros((len(shortsel), 3))
-models = np.zeros((len(shortsel), 4, 1036))
+models = np.zeros((len(shortsel), 6, 1036))
 
 # Checking memory useage
 
@@ -152,7 +168,9 @@ models = np.zeros((len(shortsel), 4, 1036))
 for i in np.arange(len(spec)):
     if (i % 1000) == 999:
         log.info('Fitting the %i spectrum' % (i+1))
-    sel = np.isfinite(spec[i]) * (wave>3600)
+    sel = np.isfinite(spec[i]) * (wave>3650) * (wave<5450)
+    if sel.sum() < 100:
+        continue
     chi2_stars, model_stars, vbest, dof_stars = get_reduced_chi2(H_stars, 
                                                                  spec[i], 
                                                                  err[i], M[i],
@@ -168,14 +186,16 @@ for i in np.arange(len(spec)):
                                                                  sel, 
                                                                  config.zbins_qso)
     thresh[i] = np.sqrt(2. * dof_stars) / dof_stars
-    chis[i] = np.array([np.min(chi2_stars), np.min(chi2_galaxy), 
-                        np.min(chi2_qso)])
+    chis[i] = np.array([chi2_stars, chi2_galaxy, 
+                        chi2_qso])
     zs[i] = np.array([vbest, zbest_galaxy, zbest_qso])
     models[i, 0] = model_stars
     models[i, 1] = model_galaxy
     models[i, 2] = model_qso
     models[i, 3] = spec[i]
-    norm = np.min(chis[i])
+    models[i, 4] = err[i]
+    models[i, 5] = weigh[i]
+    norm = 1. # np.min(chis[i])
     s = np.sort(chis[i] / norm)
     if s[0] < (s[1] - thresh[i]):
         classification[i] = np.argmin(chis[i]) + 1
