@@ -64,7 +64,14 @@ def parse_args(argv=None):
     
     parser.add_argument("-if", "--index_filename", type=str,
                         help='''Indice Filename''', default=None)
-
+    
+    parser.add_argument("-n", "--normalize",
+                    help='''Flux Normalization''',
+                    action="count", default=0)
+    
+    parser.add_argument("-q", "--quick",
+                    help='''Use existing models''',
+                    action="count", default=0)
                         
     args = parser.parse_args(args=argv)
 
