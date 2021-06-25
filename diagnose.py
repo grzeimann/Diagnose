@@ -8,15 +8,22 @@ Created on Wed Dec 23 10:44:43 2020
 
 import config
 import numpy as np
-import os
+import os.path as op
 import sys
 import warnings
 
 from astropy.io import fits
 from astropy.modeling.fitting import LevMarLSQFitter
 from astropy.modeling.models import Polynomial1D
+from astropy.table import Table
 from pca_library import get_pca_stars, get_pca_galaxy, get_pca_qso
 from input_utils import parse_args, setup_logging
+
+def get_script_path():
+    '''
+    Get script path, aka, where does Diagnose live?
+    '''
+    return op.dirname(op.realpath(__file__))
 
 def get_min(x, y, ind):
     ind0 = ind - 1
@@ -58,6 +65,12 @@ log = setup_logging('diagnose')
 warnings.simplefilter("ignore")
 
 
+# Get flux calibration correction
+dirname = get_script_path()
+T = Table.read(op.join(dirname, 'calibration', 'normalization.txt'), 
+               format='ascii.fixed_width_two_line')
+flux_normalization = np.array(T['normalization'])
+
 # Load the continuum catalog from virus observations
 f = fits.open(args.catalog)
 
@@ -66,12 +79,6 @@ f = fits.open(args.catalog)
 # wavelength to which all spectra are rectified
 # =============================================================================
 wave = np.linspace(3470, 5540, 1036)
-
-# =============================================================================
-# The info about the catalog objects is in extension 1 and includes RA, Dec,
-# and signal to noise (sn)
-# =============================================================================
-info = f[1].data
 
 # =============================================================================
 # The spectra are in extension 2
@@ -90,6 +97,22 @@ error = f[3].data
 # the fill factor for the fibers is 1/3.
 # =============================================================================
 weight = f[4].data
+
+if spectra.ndim == 1:
+    spectra = spectra[np.newaxis, :]
+    error = error[np.newaxis, :]
+    weight = weight[np.newaxis, :]
+
+# =============================================================================
+# The info about the catalog objects is in extension 1 and includes RA, Dec,
+# and signal to noise (sn)
+# =============================================================================
+try:
+    info = f[1].data
+except:
+    log.warning('Table is empty')
+    info = fits.BinTableHDU(Table(np.zeros(len(spectra)), names=['dummy'])).data
+
 
 # Initialize astropy fitter
 fitter = LevMarLSQFitter()
@@ -111,12 +134,12 @@ else:
         log.error('Please set "--low_index" and "--high_index" if no'
                       '"--index_filename" is provided')
         sys.exit()
-    shortsel = np.arange(args.low_index, args.high_index)
+    shortsel = np.arange(args.low_index, args.high_index, dtype=int)
 
 # Select down to the desired indices
-spec = spectra[shortsel]
+spec = spectra[shortsel] * flux_normalization[np.newaxis, :]
 weigh = weight[shortsel]
-err = error[shortsel]
+err = error[shortsel] * flux_normalization[np.newaxis, :]
 
 # Build an empty mask array (boolean)
 mask = np.zeros(spec.shape, dtype=bool)
@@ -148,9 +171,15 @@ mask[badspectra] = True
 spec[mask] = np.nan
 
 # Get PCA models
-H_stars = get_pca_stars(config.stellar_template_file, vbins=config.vbins)
-H_galaxy = get_pca_galaxy(zbins=config.zbins_gal)
-H_qso = get_pca_qso(zbins=config.zbins_qso)
+if args.quick:
+    g = fits.open(op.join(dirname, 'saved', 'models.fits'))
+    H_stars = g[1].data
+    H_galaxy = g[2].data
+    H_qso = g[3].data
+else:
+    H_stars = get_pca_stars(config.stellar_template_file, vbins=config.vbins)
+    H_galaxy = get_pca_galaxy(zbins=config.zbins_gal)
+    H_qso = get_pca_qso(zbins=config.zbins_qso)
 
 # Get the mean for each spectrum
 M = np.nanmean(spec, axis=1)
@@ -201,11 +230,12 @@ for i in np.arange(len(spec)):
         classification[i] = np.argmin(chis[i]) + 1
     else:
         classification[i] = 4
-    
+
 fitslist = [fits.PrimaryHDU(models), fits.ImageHDU(classification), 
-            fits.ImageHDU(chis), fits.ImageHDU(thresh), fits.ImageHDU(zs)]
+            fits.ImageHDU(chis), fits.ImageHDU(thresh), fits.ImageHDU(zs),
+            fits.BinTableHDU(info[shortsel])]
 for f, n in zip(fitslist, ['models', 'class', 'chi2', 'thresh',
-                           'zs']):
+                           'zs', 'info']):
     f.header['EXTNAME'] = n
 fits.HDUList(fitslist).writeto('classification_%03d.fits' % args.suffix, 
             overwrite=True)
