@@ -6,6 +6,7 @@ Created on Thu Mar 25 19:44:36 2021
 @author: gregz
 """
 
+import glob
 import numpy as np
 import os.path as op
 
@@ -46,8 +47,9 @@ def get_pca_miles(n_components=50,
     # define wavelength
     G = Gaussian1DKernel(2.3)
     wave = np.linspace(3470, 5540, 1036)
+    wdspec = get_wd_spec()
     models = np.zeros((len(info), len(wave)))
-    i_array = np.zeros((len(info), 3))
+    i_array = np.ones((len(info), 3))*45000.
     for i in np.arange(len(info)):
         g = fits.open(op.join(basedir, 's%s.fits' % info[i][0]))
         waveo = (g[0].header['CRVAL1'] + np.linspace(0, len(g[0].data[0])-1,
@@ -57,8 +59,6 @@ def get_pca_miles(n_components=50,
                      fill_value=np.nan)
         models[i] = I(wave)
         i_array[i] = info[i][1:]
-    
-    
     k = []
     inds = np.argsort(i_array[:, 0])
     sel = wave > 3550.
@@ -76,7 +76,7 @@ def get_pca_miles(n_components=50,
             continue
         k.append(i)
     print(len(k))
-    new_models = models * 1.    
+    new_models = models* 1. 
     new_models[np.isnan(new_models)] = 0.0
     M = new_models[:, sel].mean(axis=1)
     S = new_models[:, sel].std(axis=1)
@@ -86,6 +86,9 @@ def get_pca_miles(n_components=50,
     Hp = np.zeros((H.shape[0], len(wave)))
     Hp[:, sel] = H
     H = Hp * 1.
+    HT = np.zeros((H.shape[0]+len(wdspec), H.shape[1]))
+    HT[:len(H)] = H
+    HT[len(H):] = wdspec
     T = np.zeros(new_models.shape)
     SOLS = np.zeros((len(new_models), n_components))
     for i in np.arange(T.shape[0]):
@@ -93,7 +96,7 @@ def get_pca_miles(n_components=50,
         SOLS[i] = sol
         T[i] = np.dot(H.T, sol) * S[i] + M[i]
     T[:, ~sel] = 0.
-    return H, models, i_array, T, SOLS, pca
+    return HT, models, i_array, T, SOLS, pca, k
 
 def get_pca_stars(template_name, vbins=np.linspace(-500, 500, 50),
                   wave=np.linspace(3470, 5540, 1036)):
@@ -111,7 +114,48 @@ def get_pca_stars(template_name, vbins=np.linspace(-500, 500, 50),
             M[i, j] = I(wave / (1. + (v / 2.99792e5)))
     M = (M - np.mean(M, axis=(0, 2))[np.newaxis, :, np.newaxis]) / np.std(M, axis=(0, 2))[np.newaxis, :, np.newaxis]
     return M
-    
+   
+def get_wd_spec(wave=np.linspace(3470, 5540, 1036)):
+    dirname = get_script_path()
+    lp = op.join(dirname, 'redrock-templates', 'rrtemplate-star-WD.fits')
+    f = fits.open(lp)
+    models  = f[0].data
+    nwave = (f[0].header['CRVAL1']+np.arange(models.shape[1])*
+                     f[0].header['CDELT1'])
+    G = Gaussian1DKernel(1.5)
+    M = np.zeros((models.shape[0], len(wave)))
+    nbins = int(len(nwave) / (2. / (nwave[1] - nwave[0])))
+    nwave = np.array([np.mean(chunk) for chunk in np.array_split(nwave, nbins)])
+    for j in np.arange(models.shape[0]):
+        nmod = np.array([np.mean(chunk) for chunk in np.array_split(models[j], nbins)])
+        nmod = convolve(nmod, G, boundary='extend')
+        I = interp1d(nwave, nmod, kind='quadratic', bounds_error=False, 
+                     fill_value=0.0)
+        M[j] = I(wave)
+    return M    
+
+def get_redrock_stellar_spec(wave=np.linspace(3470, 5540, 1036)):
+    dirname = get_script_path()
+    fnames = glob.glob(op.join(dirname, 'redrock-templates', 
+                               'rrtemplate-star-*.fits'))
+    M = []
+    for fname in fnames:
+        f = fits.open(fname)
+        models  = f[0].data
+        print(op.basename(fname), models.shape)
+        nwave = (f[0].header['CRVAL1']+np.arange(models.shape[1])*
+                     f[0].header['CDELT1'])
+        G = Gaussian1DKernel(1.5)
+        nbins = int(len(nwave) / (2. / (nwave[1] - nwave[0])))
+        nwave = np.array([np.mean(chunk) for chunk in np.array_split(nwave, nbins)])
+        for j in np.arange(models.shape[0]):
+            nmod = np.array([np.mean(chunk) for chunk in np.array_split(models[j], nbins)])
+            nmod = convolve(nmod, G, boundary='extend')
+            I = interp1d(nwave, nmod, kind='quadratic', bounds_error=False, 
+                         fill_value=0.0)
+            M.append(I(wave))
+    return np.array(M) 
+
 
 def get_pca_qso(zbins=np.linspace(0.01, 0.5, 50), 
                 wave=np.linspace(3470, 5540, 1036)):
