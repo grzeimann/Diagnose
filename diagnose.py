@@ -42,7 +42,7 @@ def get_reduced_chi2(H, spectrum, spectrum_error, m, sel1, zbins,
     sel = sel1 * True
     for j in np.arange(len(zbins)):
         solgal = np.linalg.lstsq(H[j].T[sel], spectrum[sel] - m)[0]
-        gal_model = np.dot(H[j].T, solgal) + M[i]
+        gal_model = np.dot(H[j].T, solgal) + m
         V = (spectrum[sel] - gal_model[sel]) / spectrum_error[sel]
         chi2[j] = (1. / (sel.sum() + 1. - n_components) * np.sum(V**2))
     ind = np.argmin(chi2)
@@ -137,9 +137,12 @@ else:
     shortsel = np.arange(args.low_index, args.high_index, dtype=int)
 
 # Select down to the desired indices
-spec = spectra[shortsel] * flux_normalization[np.newaxis, :]
+spec = spectra[shortsel] 
 weigh = weight[shortsel]
-err = error[shortsel] * flux_normalization[np.newaxis, :]
+err = error[shortsel] 
+if args.normalize:
+    spec = spec * flux_normalization[np.newaxis, :]
+    err = err * flux_normalization[np.newaxis, :]
 
 # Build an empty mask array (boolean)
 mask = np.zeros(spec.shape, dtype=bool)
@@ -187,12 +190,17 @@ M = np.nanmean(spec, axis=1)
 # Build empty arrays to save the data
 chis = np.zeros((len(shortsel), 3))
 thresh = np.zeros((len(shortsel),))
+starnames = np.chararray((len(shortsel),))
 classification = np.zeros((len(shortsel),))
 zs = np.zeros((len(shortsel), 3))
 models = np.zeros((len(shortsel), 6, 1036))
 
 # Checking memory useage
 
+H_stars_list = [H_stars[:, :5], H_stars[:, 5:10], H_stars[:, 10:13], 
+                H_stars[:, 13:18], H_stars[:, 18:23], H_stars[:, 23:28],
+                H_stars[:, 28:33], H_stars[:, 33:]]
+name_list = ['A', 'B', 'CV', 'F', 'G', 'K', 'M', 'WD']
 # Begin the fitting
 for i in np.arange(len(spec)):
     if (i % 1000) == 999:
@@ -200,11 +208,21 @@ for i in np.arange(len(spec)):
     sel = np.isfinite(spec[i]) * (wave>3650) * (wave<5450)
     if sel.sum() < 100:
         continue
-    chi2_stars, model_stars, vbest, dof_stars = get_reduced_chi2(H_stars, 
-                                                                 spec[i], 
-                                                                 err[i], M[i],
-                                                                 sel, 
-                                                                 config.vbins)
+    chi_list, m_list, v_list = ([], [], [])
+    for h_stars in H_stars_list:
+        chi2_stars, model_stars, vbest, dof_stars = get_reduced_chi2(h_stars, 
+                                                                     spec[i], 
+                                                                     err[i], M[i],
+                                                                     sel, 
+                                                                     config.vbins)
+        chi_list.append(chi2_stars)
+        m_list.append(model_stars)
+        v_list.append(vbest)
+    ind = np.argmin(chi_list)
+    chi2_stars = chi_list[ind]
+    model_stars = m_list[ind]
+    vbest = v_list[ind]
+    starnames[i] = name_list[ind]
     chi2_galaxy, model_galaxy, zbest_galaxy, dof_galaxy = get_reduced_chi2(H_galaxy, 
                                                                  spec[i], 
                                                                  err[i], M[i],
@@ -233,7 +251,7 @@ for i in np.arange(len(spec)):
 
 fitslist = [fits.PrimaryHDU(models), fits.ImageHDU(classification), 
             fits.ImageHDU(chis), fits.ImageHDU(thresh), fits.ImageHDU(zs),
-            fits.BinTableHDU(info[shortsel])]
+            fits.BinTableHDU(Table([starnames], names=['starnames'])), fits.BinTableHDU(info[shortsel])]
 for f, n in zip(fitslist, ['models', 'class', 'chi2', 'thresh',
                            'zs', 'info']):
     f.header['EXTNAME'] = n
