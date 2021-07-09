@@ -42,7 +42,7 @@ args = parser.parse_args(args=None)
 
 dirname = get_script_path()
 diagnose_path = op.join(dirname, 'diagnose.py')
-call = ('python3 %s %s'
+call = ('python3 %s %s '
         '-li %i -hi %i -s %i')
 
 if args.quick:
