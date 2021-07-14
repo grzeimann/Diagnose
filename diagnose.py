@@ -253,7 +253,7 @@ fitslist = [fits.PrimaryHDU(models), fits.ImageHDU(classification),
             fits.ImageHDU(chis), fits.ImageHDU(thresh), fits.ImageHDU(zs),
             fits.BinTableHDU(Table([starnames], names=['starnames'])), fits.BinTableHDU(info[shortsel])]
 for f, n in zip(fitslist, ['models', 'class', 'chi2', 'thresh',
-                           'zs', 'info']):
+                           'zs', 'stellartype', 'table']):
     f.header['EXTNAME'] = n
 fits.HDUList(fitslist).writeto('classification_%03d.fits' % args.suffix, 
             overwrite=True)
