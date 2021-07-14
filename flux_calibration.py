@@ -14,11 +14,12 @@ from astropy.io import fits
 
 path = '/work/03730/gregz/maverick/classifications'
 filenames = sorted(glob.glob(op.join(path, 'classifications*.fits')))
+print(filenames)
 
 speclist = []
 for filename in filenames:
     f = fits.open(filename)
-    is_wd = np.where((f[1].data == 1.) * (f[5].data['starnames'] == 'W'))[0]
+    is_wd = np.where((f[1].data == 1) * (f[5].data['starnames'] == 'W'))[0]
     if len(is_wd) > 0:
         speclist.append(f[0].data[is_wd])
 speclist = np.vstack(speclist)
