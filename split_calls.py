@@ -28,7 +28,11 @@ parser.add_argument("catalog", nargs='?', type=str,
 
 parser.add_argument("-N", "--n_tasks", type=int,
                     help='''Total number of tasks''', 
-                    default=None)
+                    default=80)
+
+parser.add_argument("-Nf", "--n_files", type=int,
+                    help='''Total number of files''', 
+                    default=2)
 
 parser.add_argument("-n", "--normalize",
                 help='''Flux Normalization''',
@@ -59,11 +63,14 @@ lows = [chunk[0] for chunk in chunks]
 highs = [chunk[-1]+1 for chunk in chunks]
 
 cnt = 1
-with open('diagnose_calls', 'w') as out_file:              
-    for li, hi in zip(lows, highs):
-        call_str = call % (diagnose_path, args.catalog, li, hi, cnt)
-        out_file.write(call_str + '\n')
-        cnt += 1
+low_chunks = np.array_split(lows, args.n_files)
+high_chunks = np.array_split(highs, args.n_files)
+for k in np.arange(args.n_files):
+    with open('diagnose_calls_%i' % (k+1), 'w') as out_file:              
+        for li, hi in zip(low_chunks[k], high_chunks[k]):
+            call_str = call % (diagnose_path, args.catalog, li, hi, cnt)
+            out_file.write(call_str + '\n')
+            cnt += 1
 
 
 
