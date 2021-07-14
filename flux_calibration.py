@@ -13,7 +13,7 @@ import os.path as op
 from astropy.io import fits
 
 path = '/work/03730/gregz/maverick/classifications'
-filenames = sorted(glob.glob(op.join(path, 'classifications*.fits')))
+filenames = sorted(glob.glob(op.join(path, 'classification*.fits')))
 print(filenames)
 
 speclist = []
