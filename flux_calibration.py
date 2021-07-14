@@ -18,7 +18,7 @@ filenames = sorted(glob.glob(op.join(path, 'classifications*.fits')))
 speclist = []
 for filename in filenames:
     f = fits.open(filename)
-    is_wd = np.where((f[1].data == 1.) * (f[5].data == 'W'))[0]
+    is_wd = np.where((f[1].data == 1.) * (f[5].data['starnames'] == 'W'))[0]
     if len(is_wd) > 0:
         speclist.append(f[0].data[is_wd])
 speclist = np.vstack(speclist)
