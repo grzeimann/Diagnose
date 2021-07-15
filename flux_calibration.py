@@ -30,7 +30,7 @@ def write_fits(st_type, filenames):
             MJD.append(f[-1].data['mjd'][is_st])
             S.append(f[-1].data['shotid'][is_st])
     speclist = np.vstack(speclist)
-    R, D, SN, GM, MJD, S = [np.vstack(i) for i in [R, D, SN, GM, MJD, S]]
+    R, D, SN, GM, MJD, S = [np.hstack(i) for i in [R, D, SN, GM, MJD, S]]
     T = Table([R, D, SN, GM, MJD, S], names=['RA', 'Dec', 'sn', 'gmag', 'mjd', 
                                              'shotid'])
     fits.HDUList([fits.PrimaryHDU(speclist), fits.BinTableHDU(T)]).writeto(
