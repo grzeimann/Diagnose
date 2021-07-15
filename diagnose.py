@@ -251,7 +251,7 @@ for i in np.arange(len(spec)):
 
 fitslist = [fits.PrimaryHDU(models), fits.ImageHDU(classification), 
             fits.ImageHDU(chis), fits.ImageHDU(thresh), fits.ImageHDU(zs),
-            fits.BinTableHDU(Table([starnames], names=['starnames'])), fits.BinTableHDU(Table(info)[shortsel]]
+            fits.BinTableHDU(Table([starnames], names=['starnames'])), fits.BinTableHDU(Table(info)[shortsel])]
 for f, n in zip(fitslist, ['models', 'class', 'chi2', 'thresh',
                            'zs', 'stellartype', 'info']):
     f.header['EXTNAME'] = n
