@@ -28,4 +28,4 @@ idx_sdss,d2d,d3d = coords_virus.match_to_catalog_sky(coords_sdss)
 print('Done matching')
 matches = np.where(d2d.arcsec<3.)[0]
     
-np.savetxt('sdss_matches.txt', np.array(matches, dtype=int))
+np.savetxt('sdss_matches.txt', np.array(matches, dtype=int), fmt='%d')
