@@ -40,7 +40,7 @@ log = setup_logging('flux_cal')
 path = '/work/03730/gregz/maverick/classifications'
 filenames = sorted(glob.glob(op.join(path, 'classification*.fits')))
 
-stellar_types = ['B', 'A', 'W']
+stellar_types = ['M']
 
 for st_type in stellar_types:
     log.info('Getting stellar type: %s' % st_type)
