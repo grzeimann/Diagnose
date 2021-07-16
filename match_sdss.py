@@ -19,8 +19,8 @@ dec_sdss = t["PLUG_DEC"]
 
 f = fits.open("/work/03730/gregz/maverick/parallel/HETVIPS_continuum_v1.0.fits")
 info = f[1].data
-ra_virus = info['ra']
-dec_virus = info['dec']
+ra_virus = info['RA']
+dec_virus = info['Dec']
 coords_sdss = SkyCoord(ra=ra_sdss*u.arcsecond,dec=dec_sdss*u.arcsecond)
 coords_virus = SkyCoord(ra=ra_virus*u.arcsecond,dec=dec_virus*u.arcsecond)
 print('Matching the catalogs')
