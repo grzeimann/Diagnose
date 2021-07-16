@@ -22,8 +22,8 @@ ra_virus = info['RA']
 dec_virus = info['Dec']
 coords_sdss = SkyCoord(ra=ra_sdss*u.arcsecond,dec=dec_sdss*u.arcsecond)
 coords_virus = SkyCoord(ra=ra_virus*u.arcsecond,dec=dec_virus*u.arcsecond)
-len(ra_virus)
-len(ra_sdss)
+
+print(len(ra_sdss), len(ra_virus))
 print('Matching the catalogs')
 idx_sdss,d2d,d3d = coords_virus.match_to_catalog_sky(coords_sdss)
 print('Done matching')
