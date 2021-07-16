@@ -8,14 +8,13 @@ Created on Thu Jul 15 12:58:06 2021
 
 import numpy as np
 
-from astropy.table import Table
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-t = Table.read("/work/07918/mqd5709/stampede2/sdss_spectra/specObj-dr10.fits")
-ra_sdss = t['PLUG_RA']
-dec_sdss = t["PLUG_DEC"]
+t = fits.open("/work/07918/mqd5709/stampede2/sdss_spectra/specObj-dr10.fits")
+ra_sdss = t[1].data['PLUG_RA']
+dec_sdss = t[1].data["PLUG_DEC"]
 
 f = fits.open("/work/03730/gregz/maverick/parallel/HETVIPS_continuum_v1.0.fits")
 info = f[1].data
