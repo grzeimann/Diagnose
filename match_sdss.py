@@ -26,13 +26,7 @@ coords_virus = SkyCoord(ra=ra_virus*u.deg,dec=dec_virus*u.deg)
 print('Start matching')
 idx_sdss,d2d,d3d = coords_virus.match_to_catalog_sky(coords_sdss)
 print('Done matching')
-delta_ra, delta_dec, matches = ([], [], [])
-for i in np.arange(len(idx_sdss)):
-    if d2d.arcsec > 3.:
-        continue
-    matches.append(idx_sdss[i])
-    delta_ra.append(3600. * np.cos(np.deg2rad(dec_virus[i])) * (ra_virus[i] - ra_sdss[idx_sdss[i]]))
-    delta_dec.append(3600. * (dec_virus[i] - dec_sdss[idx_sdss[i]]))
+matches = np.where(d2d.arcsec<3.)[0]
     
 matches = np.hastack(matches)
 np.savetxt('sdss_matches.txt', matches)
