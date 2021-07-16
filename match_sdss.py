@@ -20,11 +20,10 @@ f = fits.open("/work/03730/gregz/maverick/parallel/HETVIPS_continuum_v1.0.fits")
 info = f[1].data
 ra_virus = info['RA']
 dec_virus = info['Dec']
-coords_sdss = SkyCoord(ra=ra_sdss*u.arcsecond,dec=dec_sdss*u.arcsecond)
-coords_virus = SkyCoord(ra=ra_virus*u.arcsecond,dec=dec_virus*u.arcsecond)
+coords_sdss = SkyCoord(ra=ra_sdss*u.deg,dec=dec_sdss*u.deg)
+coords_virus = SkyCoord(ra=ra_virus*u.deg,dec=dec_virus*u.deg)
 
-print(len(ra_sdss), len(ra_virus))
-print('Matching the catalogs')
+print('Start matching')
 idx_sdss,d2d,d3d = coords_virus.match_to_catalog_sky(coords_sdss)
 print('Done matching')
 delta_ra, delta_dec, matches = ([], [], [])
