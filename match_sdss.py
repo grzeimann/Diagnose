@@ -29,3 +29,4 @@ print('Done matching')
 matches = np.where(d2d.arcsec<3.)[0]
     
 np.savetxt('sdss_matches.txt', np.array(matches, dtype=int), fmt='%d')
+np.savetxt('sdss_matches_indices.txt', np.array(idx_sdss[matches], dtype=int), fmt='%d')
