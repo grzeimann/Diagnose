@@ -24,7 +24,7 @@ objID, RA, Dec, shotid, gmag, rmag = [[T[name][0]]*N for name in
 imag, zmag, ymag, sn, barycor, mjd, exptime = [[T[name][0]]*N for name in 
                    ['imag', 'zmag', 'ymag', 'sn', 'barycor', 'mjd', 'exptime']]
 chi2_star, chi2_galaxy, chi2_qso = ([1.]*N, [1.]*N, [1.]*N)
-z_star, z_galaxy, z_qso, z_best = ([0.]*N, [0.]*N, [0.]*N, [0.]*N, [0.]*N)
+z_star, z_galaxy, z_qso, z_best = ([0.]*N, [0.]*N, [0.]*N, [0.]*N)
 classification, stellartype = (['GALAXY']*N, ['W']*N)
 colnames = ['objID', 'RA', 'Dec', 'shotid', 'gmag', 'rmag', 'imag', 'zmag',
             'ymag', 'sn', 'barycor', 'mjd', 'exptime', 'chi2_star',
@@ -33,6 +33,7 @@ colnames = ['objID', 'RA', 'Dec', 'shotid', 'gmag', 'rmag', 'imag', 'zmag',
 
 i = 0
 for fn in filenames:
+    print('Working on %s' % fn)
     f = fits.open(fn)
     l = f[1].shape[0]
     objID[i:i+l] = f['info'].data['objID']
