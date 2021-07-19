@@ -15,6 +15,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 filename = sys.argv[1]
+
 folder = sys.argv[2]
 N = fits.open(filename)[2].shape[0]
 filenames = sorted(glob.glob(op.join(folder, 'classification*.fits')))
