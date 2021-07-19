@@ -62,7 +62,7 @@ for fn in filenames:
         sel = np.where(best_ind == j)[0]
         zbest[sel] = f['zs'].data[sel, j]
     z_best[i:i+l] = zbest
-    class_label = np.array(['GALAXY'] * N)
+    class_label = np.array(['GALAXY'] * l)
     for j, label in zip(np.arange(4), ['STAR', 'GALAXY', 'QSO', 'UNKNOWN']):
         sel = np.where(best_ind == j)[0]
         class_label[sel] = label 
