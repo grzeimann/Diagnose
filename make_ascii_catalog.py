@@ -31,6 +31,12 @@ colnames = ['objID', 'RA', 'Dec', 'shotid', 'gmag', 'rmag', 'imag', 'zmag',
             'ymag', 'sn', 'barycor', 'mjd', 'exptime', 'chi2_star',
             'chi2_galaxy', 'chi2_qso', 'z_star', 'z_galaxy', 'z_qso', 'z_best',
             'classification', 'stellartype']
+format_dict = {'RA': '%0.6f', 'Dec': '%0.6f', 'gmag': '%0.3f', 'rmag': '%0.3f',
+               'imag': '%0.3f', 'zmag': '%0.3f', 'ymag': '%0.3f',
+               'sn': '%0.3f', 'barycor': '%0.1f', 'mjd': '%0.8f',
+               'exptime': '%0.1f', 'z_star': '%0.8f', 'z_galaxy': '%0.5f',
+               'z_qso': '%0.5f', 'chi2_star': '%0.3f', 'chi2_galaxy': '%0.3f',
+               'chi2_qso': '%0.3f', 'z_best': '%0.8f'}
 
 i = 0
 for fn in filenames:
@@ -76,4 +82,4 @@ T = Table([objID, RA, Dec, shotid, gmag, rmag, imag, zmag,
             chi2_galaxy, chi2_qso, z_star, z_galaxy, z_qso, z_best,
             classification, stellartype], names=colnames)
 T.write('HETVIPS_classifications.txt', format='ascii.fixed_width_two_line', 
-        overwrite=True)
+        overwrite=True, formats=format_dict)
