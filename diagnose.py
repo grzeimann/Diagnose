@@ -16,7 +16,7 @@ from astropy.io import fits
 from astropy.modeling.fitting import LevMarLSQFitter
 from astropy.modeling.models import Polynomial1D
 from astropy.table import Table
-from pca_library import get_pca_stars, get_pca_galaxy, get_pca_qso
+from pca_library import get_pca_stars, get_pca_galaxy, get_pca_qso, get_redrock_stellar_spec
 from input_utils import parse_args, setup_logging
 
 def get_script_path():
@@ -180,14 +180,14 @@ if args.quick:
     H_galaxy = g[2].data
     H_qso = g[3].data
 else:
-    H_stars = get_pca_stars(config.stellar_template_file, vbins=config.vbins)
+    H_stars = get_redrock_stellar_spec()
     H_galaxy = get_pca_galaxy(zbins=config.zbins_gal)
     H_qso = get_pca_qso(zbins=config.zbins_qso)
 
 # Get the mean for each spectrum
 M = np.nanmean(spec, axis=1)
 
-name_list = ['A', 'B', 'CV', 'F', 'G', 'K', 'M', 'WD']
+name_list = ['A', 'B', 'F', 'G', 'K', 'M', 'WD']
 # Build empty arrays to save the data
 chis = np.zeros((len(shortsel), 3))
 thresh = np.zeros((len(shortsel),))
@@ -199,10 +199,10 @@ pca_array = np.zeros((len(shortsel), len(name_list)+2, 10))
 
 # Checking memory useage
 
-H_stars_list = [H_stars[:, :5], H_stars[:, 5:10], H_stars[:, 10:13], 
-                H_stars[:, 13:18], H_stars[:, 18:23], H_stars[:, 23:28],
-                H_stars[:, 28:33], H_stars[:, 33:]]
-name_list = ['A', 'B', 'CV', 'F', 'G', 'K', 'M', 'WD']
+H_stars_list = [H_stars[:, :5], H_stars[:, 5:10], 
+                H_stars[:, 10:15], H_stars[:, 15:20], H_stars[:, 20:25],
+                H_stars[:, 25:30], H_stars[:, 30:]]
+name_list = ['A', 'B', 'F', 'G', 'K', 'M', 'WD']
 # Begin the fitting
 for i in np.arange(len(spec)):
     if (i % 1000) == 999:
